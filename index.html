@@ -358,7 +358,7 @@
 
 
 
-      <!-- RUAS JALAN -->
+           <!-- RUAS JALAN -->
 
       <label>
 
@@ -380,6 +380,42 @@
 
 
 
+      <!-- KECAMATAN (BARU) -->
+
+      <label>
+
+        Kecamatan
+
+      </label>
+
+      <input
+
+        type="text"
+
+        id="kecamatan"
+
+        placeholder="Contoh: Cibiru">
+
+
+
+      <!-- DESA/KELURAHAN (BARU) -->
+
+      <label>
+
+        Desa/Kelurahan
+
+      </label>
+
+      <input
+
+        type="text"
+
+        id="desa"
+
+        placeholder="Contoh: Cipadung">
+
+
+
       <!-- DESKRIPSI -->
 
       <label>
@@ -397,7 +433,6 @@
         required
 
         placeholder="Jelaskan kondisi kerusakan jalan, misalnya jalan berlubang, retak, amblas, aspal terkelupas, dan lain-lain."></textarea>
-
 
 
       <!-- LOKASI -->
@@ -820,7 +855,7 @@ document
       }
 
 
-      // -----------------------------------------------
+         // -----------------------------------------------
       // DATA FORM
       // -----------------------------------------------
 
@@ -834,6 +869,12 @@ document
 
         ruas:
           document.getElementById('ruas').value,
+
+        kecamatan:
+          document.getElementById('kecamatan').value,
+
+        desa:
+          document.getElementById('desa').value,
 
         uraian:
           document.getElementById('uraian').value,
