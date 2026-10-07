@@ -485,36 +485,23 @@
 
 
 
-      <!-- FOTO -->
-
+       <!-- FOTO -->
       <label>
-
         Foto Kerusakan
-
         <span class="required">*</span>
-
       </label>
 
-
+      <!-- HAPUS capture="environment", TAMBAHKAN multiple -->
       <input
-
         type="file"
-
         id="foto"
-
         accept="image/*"
-
-        capture="environment"
-
+        multiple
         required>
 
-
       <div class="photo-info">
-
-        📷 Silakan ambil foto kondisi kerusakan jalan.
-
-        Maksimal ukuran foto 5 MB.
-
+        📷 Silakan ambil/pilih foto kondisi kerusakan jalan.<br>
+        <strong>Maksimal 4 foto</strong>, masing-masing maksimal 5 MB.
       </div>
 
 
@@ -831,65 +818,94 @@ document
       }
 
 
-      // -----------------------------------------------
-      // BACA FOTO
-      // -----------------------------------------------
-
-      let foto;
-
-
-      try {
-
-        foto =
-          await bacaFoto(file);
-
-      }
-
-      catch (err) {
-
-        error.innerHTML =
-          '❌ ' + err.message;
-
-        return;
-
-      }
-
-
-         // -----------------------------------------------
-      // DATA FORM
-      // -----------------------------------------------
-
-      const data = {
-
-        nama:
-          document.getElementById('nama').value,
-
-        hp:
-          document.getElementById('hp').value,
-
-        ruas:
-          document.getElementById('ruas').value,
-
-        kecamatan:
-          document.getElementById('kecamatan').value,
-
-        desa:
-          document.getElementById('desa').value,
-
-        uraian:
-          document.getElementById('uraian').value,
-
-        latitude:
-          lat,
-
-        longitude:
-          lng,
-
-        foto:
-          foto
-
+   // =====================================================
+// MEMBACA BANYAK FOTO (Pengganti fungsi bacaFoto)
+// =====================================================
+function bacaBanyakFoto(files) {
+  return Promise.all(Array.from(files).map(file => {
+    return new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        resolve({
+          fileName: file.name,
+          mimeType: file.type,
+          data: e.target.result.split(',')[1]
+        });
       };
+      reader.onerror = function() {
+        reject(new Error('Foto tidak dapat dibaca.'));
+      };
+      reader.readAsDataURL(file);
+    });
+  }));
+}
 
+// =====================================================
+// SUBMIT FORM (Bagian validasi foto di dalamnya)
+// =====================================================
+document.getElementById('formAduan').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const error = document.getElementById('error');
+  error.innerHTML = '';
+
+  // ... (Kode cek lokasi tetap sama seperti sebelumnya) ...
+  const lat = document.getElementById('latitude').value;
+  const lng = document.getElementById('longitude').value;
+  if (!lat || !lng) {
+    error.innerHTML = '⚠️ Silakan ambil lokasi terlebih dahulu.';
+    return;
+  }
+
+  // -----------------------------------------------
+  // CEK & VALIDASI FOTO (BANYAK)
+  // -----------------------------------------------
+  const fotoInput = document.getElementById('foto');
+
+  if (!fotoInput.files.length) {
+    error.innerHTML = '⚠️ Silakan pilih atau ambil foto kerusakan.';
+    return;
+  }
+
+  // Batasi maksimal 4 foto untuk mencegah payload Google Apps Script overload
+  if (fotoInput.files.length > 4) {
+    error.innerHTML = '⚠️ Maksimal 4 foto per pengaduan.';
+    return;
+  }
+
+  // Cek ukuran setiap foto
+  for (let i = 0; i < fotoInput.files.length; i++) {
+    if (fotoInput.files[i].size > 5 * 1024 * 1024) {
+      error.innerHTML = `⚠️ Ukuran foto "${fotoInput.files[i].name}" melebihi 5 MB.`;
+      return;
+    }
+  }
+
+  // -----------------------------------------------
+  // BACA SEMUA FOTO
+  // -----------------------------------------------
+  let fotoArray;
+  try {
+    fotoArray = await bacaBanyakFoto(fotoInput.files);
+  } catch (err) {
+    error.innerHTML = '❌ ' + err.message;
+    return;
+  }
+
+  // -----------------------------------------------
+  // DATA FORM
+  // -----------------------------------------------
+  const data = {
+    nama: document.getElementById('nama').value,
+    hp: document.getElementById('hp').value,
+    ruas: document.getElementById('ruas').value,
+    kecamatan: document.getElementById('kecamatan').value,
+    desa: document.getElementById('desa').value,
+    uraian: document.getElementById('uraian').value,
+    latitude: lat,
+    longitude: lng,
+    foto: fotoArray // Sekarang dikirim sebagai Array
+  };
 
       // -----------------------------------------------
       // TOMBOL
